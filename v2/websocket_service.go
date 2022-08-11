@@ -347,10 +347,10 @@ type WsKline struct {
 }
 
 // WsAggTradeHandler handle websocket aggregate trade event
-type WsAggTradeHandler func(event *WsAggTradeEvent)
+type WsAggTradeHandler func(event *WsAggTradeEvent, policy *WsTradePolicy)
 
 // WsAggTradeServe serve websocket aggregate handler with a symbol
-func WsAggTradeServe(symbol string, handler WsAggTradeHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+func WsAggTradeServe(symbol string, handler WsAggTradeHandler, errHandler ErrHandler, policy *WsTradePolicy) (doneC, stopC chan struct{}, err error) {
 	endpoint := fmt.Sprintf("%s/%s@aggTrade", getWsEndpoint(), strings.ToLower(symbol))
 	cfg := newWsConfig(endpoint)
 	wsHandler := func(message []byte) {
@@ -360,13 +360,13 @@ func WsAggTradeServe(symbol string, handler WsAggTradeHandler, errHandler ErrHan
 			errHandler(err)
 			return
 		}
-		handler(event)
+		handler(event, policy)
 	}
 	return wsServe(cfg, wsHandler, errHandler)
 }
 
 // WsCombinedAggTradeServe is similar to WsAggTradeServe, but it handles multiple symbolx
-func WsCombinedAggTradeServe(symbols []string, handler WsAggTradeHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+func WsCombinedAggTradeServe(symbols []string, handler WsAggTradeHandler, errHandler ErrHandler, policy *WsTradePolicy) (doneC, stopC chan struct{}, err error) {
 	endpoint := getCombinedEndpoint()
 	for s := range symbols {
 		endpoint += fmt.Sprintf("%s@aggTrade", strings.ToLower(symbols[s])) + "/"
@@ -396,7 +396,7 @@ func WsCombinedAggTradeServe(symbols []string, handler WsAggTradeHandler, errHan
 
 		event.Symbol = strings.ToUpper(symbol)
 
-		handler(event)
+		handler(event, policy)
 	}
 	return wsServe(cfg, wsHandler, errHandler)
 }
@@ -414,6 +414,11 @@ type WsAggTradeEvent struct {
 	TradeTime             int64  `json:"T"`
 	IsBuyerMaker          bool   `json:"m"`
 	Placeholder           bool   `json:"M"` // add this field to avoid case insensitive unmarshaling
+}
+type WsTradePolicy struct {
+	IsLongTrigger   bool
+	PriceTrigger    float64
+	QuantityTrigger float64
 }
 
 // WsTradeHandler handle websocket trade event
