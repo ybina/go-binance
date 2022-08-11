@@ -591,8 +591,8 @@ func (s *websocketServiceTestSuite) TestWsAggTradeServe() {
 	fakeErrMsg := "fake error"
 	s.mockWsServe(data, errors.New(fakeErrMsg))
 	defer s.assertWsServe()
-
-	doneC, stopC, err := WsAggTradeServe("ETHBTC", func(event *WsAggTradeEvent) {
+	//doneC, stopC, err := WsAggTradeServe()
+	doneC, stopC, err := WsAggTradeServe("ETHBTC", func(event *WsAggTradeEvent, policy *WsTradePolicy) {
 		e := &WsAggTradeEvent{
 			Event:                 "aggTrade",
 			Time:                  1499405254326,
@@ -608,7 +608,7 @@ func (s *websocketServiceTestSuite) TestWsAggTradeServe() {
 		s.assertWsAggTradeEventEqual(e, event)
 	}, func(err error) {
 		s.r().EqualError(err, fakeErrMsg)
-	})
+	}, nil)
 	s.r().NoError(err)
 	stopC <- struct{}{}
 	<-doneC
@@ -702,7 +702,7 @@ func (s *websocketServiceTestSuite) TestWsCombinedAggTradeServe() {
 	s.mockWsServe(data, errors.New(fakeErrMsg))
 	defer s.assertWsServe()
 
-	doneC, stopC, err := WsCombinedAggTradeServe([]string{"ETHBTC"}, func(event *WsAggTradeEvent) {
+	doneC, stopC, err := WsCombinedAggTradeServe([]string{"ETHBTC"}, func(event *WsAggTradeEvent, policy *WsTradePolicy) {
 		e := &WsAggTradeEvent{
 			Event:                 "aggTrade",
 			Time:                  1499405254326,
@@ -718,7 +718,7 @@ func (s *websocketServiceTestSuite) TestWsCombinedAggTradeServe() {
 		s.assertWsAggTradeEventEqual(e, event)
 	}, func(err error) {
 		s.r().EqualError(err, fakeErrMsg)
-	})
+	}, nil)
 	s.r().NoError(err)
 	stopC <- struct{}{}
 	<-doneC
