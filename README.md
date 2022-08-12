@@ -1,6 +1,7 @@
 ### go-binance
 
 A Golang SDK for [binance](https://www.binance.com) API.
+This Repo is from adshao/go-binance and added policy function when listen to websocket for a better trading.
 
 [![Build Status](https://travis-ci.org/adshao/go-binance.svg?branch=master)](https://travis-ci.org/adshao/go-binance)
 [![GoDoc](https://godoc.org/github.com/adshao/go-binance?status.svg)](https://godoc.org/github.com/adshao/go-binance)
@@ -262,8 +263,11 @@ if err != nil {
 #### Aggregate
 
 ```golang
-wsAggTradeHandler := func(event *binance.WsAggTradeEvent) {
-    fmt.Println(event)
+wsAggTradeHandler := func(event *binance.WsAggTradeEvent, policy *binance.WsTradePolicy) {
+    eventPrice, _ := strconv.ParseFloat(event.Price, 64)
+	if eventPrice == policy.PriceTrigger {
+		fmt.Printf("policy matched, event pri:%v\n", eventPrice)
+	}
 }
 errHandler := func(err error) {
     fmt.Println(err)
