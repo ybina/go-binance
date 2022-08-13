@@ -54,12 +54,17 @@ type WsAggTradeEvent struct {
 	TradeTime        int64  `json:"T"`
 	Maker            bool   `json:"m"`
 }
+type WsAggTridePolicy struct {
+	IsLongTrigger   bool
+	PriceTrigger    float64
+	QuantityTrigger float64
+}
 
 // WsAggTradeHandler handle websocket that push trade information that is aggregated for a single taker order.
-type WsAggTradeHandler func(event *WsAggTradeEvent)
+type WsAggTradeHandler func(event *WsAggTradeEvent, policy *WsAggTridePolicy, triggerCh chan interface{})
 
 // WsAggTradeServe serve websocket that push trade information that is aggregated for a single taker order.
-func WsAggTradeServe(symbol string, handler WsAggTradeHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+func WsAggTradeServe(symbol string, handler WsAggTradeHandler, errHandler ErrHandler, policy *WsAggTridePolicy, triggerCh chan interface{}) (doneC, stopC chan struct{}, err error) {
 	endpoint := fmt.Sprintf("%s/%s@aggTrade", getWsEndpoint(), strings.ToLower(symbol))
 	cfg := newWsConfig(endpoint)
 	wsHandler := func(message []byte) {
@@ -69,13 +74,13 @@ func WsAggTradeServe(symbol string, handler WsAggTradeHandler, errHandler ErrHan
 			errHandler(err)
 			return
 		}
-		handler(event)
+		handler(event, policy, triggerCh)
 	}
 	return wsServe(cfg, wsHandler, errHandler)
 }
 
 // WsCombinedAggTradeServe is similar to WsAggTradeServe, but it handles multiple symbols
-func WsCombinedAggTradeServe(symbols []string, handler WsAggTradeHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+func WsCombinedAggTradeServe(symbols []string, handler WsAggTradeHandler, errHandler ErrHandler, policy *WsAggTridePolicy, triggerCh chan interface{}) (doneC, stopC chan struct{}, err error) {
 	endpoint := getCombinedEndpoint()
 	for _, s := range symbols {
 		endpoint += fmt.Sprintf("%s@aggTrade", strings.ToLower(s)) + "/"
@@ -104,7 +109,7 @@ func WsCombinedAggTradeServe(symbols []string, handler WsAggTradeHandler, errHan
 		}
 		event.Symbol = strings.ToUpper(symbol)
 
-		handler(event)
+		handler(event, policy, triggerCh)
 	}
 	return wsServe(cfg, wsHandler, errHandler)
 }
