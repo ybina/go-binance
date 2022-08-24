@@ -23,7 +23,19 @@ var (
 	WebsocketKeepalive = false
 	// UseTestnet switch all the WS streams from production to the testnet
 	UseTestnet = false
+
+	isProxy = false
+	pUrl    = ""
 )
+
+func SetProxy(proxyUrl string) error {
+	if len(proxyUrl) <= 0 {
+		return errors.New("proxy url is nil")
+	}
+	isProxy = true
+	pUrl = proxyUrl
+	return nil
+}
 
 // getWsEndpoint return the base endpoint of the WS according the UseTestnet flag
 func getWsEndpoint() string {
