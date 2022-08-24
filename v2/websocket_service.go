@@ -1,6 +1,7 @@
 package binance
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,7 +22,18 @@ var (
 	WebsocketTimeout = time.Second * 60
 	// WebsocketKeepalive enables sending ping/pong messages to check the connection stability
 	WebsocketKeepalive = false
+	websocketProxy     = false
+	wsProxy            = ""
 )
+
+func SetWsProxy(proxyUrl string) error {
+	if len(proxyUrl) <= 0 {
+		return errors.New("proxyUrl is nil")
+	}
+	websocketProxy = true
+	wsProxy = proxyUrl
+	return nil
+}
 
 // getWsEndpoint return the base endpoint of the WS according the UseTestnet flag
 func getWsEndpoint() string {

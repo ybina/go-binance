@@ -1,6 +1,8 @@
 package binance
 
 import (
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -24,7 +26,14 @@ func newWsConfig(endpoint string) *WsConfig {
 }
 
 var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
-	c, _, err := websocket.DefaultDialer.Dial(cfg.Endpoint, nil)
+	d := websocket.DefaultDialer
+	if websocketProxy {
+		proxy := func(_ *http.Request) (*url.URL, error) {
+			return url.Parse(wsProxy)
+		}
+		d.Proxy = proxy
+	}
+	c, _, err := d.Dial(cfg.Endpoint, nil)
 	if err != nil {
 		return nil, nil, err
 	}
