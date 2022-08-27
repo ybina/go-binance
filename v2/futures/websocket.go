@@ -26,6 +26,7 @@ func newWsConfig(endpoint string) *WsConfig {
 }
 
 var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
+	isStop := false
 	d := websocket.DefaultDialer
 	if isProxy {
 		proxy := func(_ *http.Request) (*url.URL, error) {
@@ -58,6 +59,7 @@ var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (don
 				silent = true
 			case <-doneC:
 			}
+			isStop = true
 			c.Close()
 		}()
 		for {
@@ -66,7 +68,15 @@ var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (don
 				if !silent {
 					errHandler(err)
 				}
-				return
+				if !isStop {
+					c.Close()
+					time.Sleep(time.Second)
+					c, _, err = d.Dial(cfg.Endpoint, nil)
+					continue
+				} else {
+					return
+				}
+
 			}
 			handler(message)
 		}
