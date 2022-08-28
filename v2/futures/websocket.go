@@ -74,6 +74,7 @@ var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (don
 				c.Close()
 				time.Sleep(time.Second)
 				c, _, err = d.Dial(cfg.Endpoint, nil)
+				continue
 			}
 			handler(message)
 		}
