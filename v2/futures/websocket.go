@@ -1,6 +1,7 @@
 package futures
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"time"
