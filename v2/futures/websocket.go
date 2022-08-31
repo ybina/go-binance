@@ -55,20 +55,16 @@ var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (don
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				log.Printf("conn.ReadMessage error:%v\n", err)
 				if !silent {
 					errHandler(err)
-					continue
 				}
+				log.Printf("conn.ReadMessage error:%v\n", err)
 				if isStop {
 					return
 				} else {
 				nextDial:
-					err = conn.Close()
-					if err != nil {
-						log.Printf("close conn fail:%v\n", err)
-					}
 					time.Sleep(time.Second)
+					log.Printf("......reconnect\n")
 					conn, err = newDialer(cfg, isProxy)
 					if err != nil {
 						log.Printf("newDialer err:%v\n", err)
@@ -78,7 +74,6 @@ var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (don
 						continue
 					}
 				}
-
 			}
 			handler(message)
 		}
