@@ -32,7 +32,7 @@ var wsServe = func(cfg *WsConfig, handler WsHandler, errHandler ErrHandler) (don
 	doneC = make(chan struct{})
 	stopC = make(chan struct{})
 	var conn *websocket.Conn
-	conn, err = newDialer(cfg, true)
+	conn, err = newDialer(cfg, isProxy)
 	go func() {
 		// This function will exit either on error from
 		// websocket.Conn.ReadMessage or when the stopC channel is
